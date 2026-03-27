@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SeOrganize — Acesso</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --ink: #0f1117;
+            --ink-muted: #6b7280;
+            --surface: #ffffff;
+            --panel: #0f1117;
+            --accent: #22c55e;
+            --accent-dim: #16a34a;
+            --border: #e5e7eb;
+            --error-bg: #fef2f2;
+            --error-text: #b91c1c;
+            --error-border: #fecaca;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .panel-left {
+            background: var(--panel);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 3rem;
+            overflow: hidden;
+            min-height: 100vh;
+        }
+
+        .panel-left::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 20% 80%, rgba(34,197,94,.18) 0%, transparent 55%),
+                radial-gradient(circle at 80% 10%, rgba(34,197,94,.08) 0%, transparent 45%);
+            pointer-events: none;
+        }
+
+        .grid-lines {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+            background-size: 48px 48px;
+            pointer-events: none;
+        }
+
+        .brand {
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--accent);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .brand-icon svg {
+            width: 26px;
+            height: 26px;
+        }
+
+        .brand-name {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2rem;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+            line-height: 1;
+        }
+
+        .brand-tag {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--accent);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 0.4rem;
+        }
+
+        .panel-headline {
+            position: relative;
+            z-index: 1;
+        }
+
+        .panel-headline h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2.6rem;
+            color: #ffffff;
+            line-height: 1.15;
+            letter-spacing: -0.5px;
+        }
+
+        .panel-headline h2 em {
+            color: var(--accent);
+            font-style: normal;
+        }
+
+        .panel-headline p {
+            margin-top: 1rem;
+            font-size: 0.95rem;
+            color: rgba(255,255,255,.5);
+            line-height: 1.65;
+            max-width: 320px;
+        }
+
+        .panel-footer {
+            position: relative;
+            z-index: 1;
+            font-size: 0.78rem;
+            color: rgba(255,255,255,.25);
+        }
+
+        .panel-right {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2rem;
+            background: #f9fafb;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 380px;
+            animation: slideUp .5s cubic-bezier(.22,.68,0,1.2) both;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-card h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--ink);
+            letter-spacing: -0.4px;
+            margin-bottom: 0.35rem;
+        }
+
+        .login-card .subtitle {
+            font-size: 0.9rem;
+            color: var(--ink-muted);
+            margin-bottom: 2.25rem;
+        }
+
+        .error-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--error-bg);
+            color: var(--error-text);
+            border: 1px solid var(--error-border);
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+        }
+
+        .error-box svg { flex-shrink: 0; }
+
+        .field {
+            margin-bottom: 1.25rem;
+        }
+
+        .field label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--ink);
+            letter-spacing: 0.3px;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--ink-muted);
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+        }
+
+        .field input {
+            width: 100%;
+            padding: 13px 14px 13px 42px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            color: var(--ink);
+            background: var(--surface);
+            outline: none;
+            transition: border-color .18s, box-shadow .18s;
+        }
+
+        .field input::placeholder { color: #c0c4cc; }
+
+        .field input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(34,197,94,.12);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            color: #0f1117;
+            border: none;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            letter-spacing: 0.2px;
+            position: relative;
+            overflow: hidden;
+            transition: background .18s, transform .12s;
+        }
+
+        .btn-submit:hover  { background: var(--accent-dim); }
+        .btn-submit:active { transform: scale(.98); }
+
+        .btn-submit .btn-inner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .divider {
+            margin: 1.75rem 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--ink-muted);
+            font-size: 0.78rem;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .login-footer {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--ink-muted);
+            margin-top: 1.5rem;
+        }
+
+        .login-footer a { color: var(--accent-dim); font-weight: 500; text-decoration: none; }
+        .login-footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 768px) {
+            body { grid-template-columns: 1fr; }
+            .panel-left { display: none; }
+            .panel-right { min-height: 100vh; padding: 2rem 1.5rem; background: #fff; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="panel-left">
+    <div class="grid-lines"></div>
+
+    <div class="brand">
+        <div class="brand-icon">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#0f1117" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+        </div>
+        <div class="brand-name">SeOrganize</div>
+        <div class="brand-tag">Sistema Corporativo</div>
+    </div>
+
+    <div class="panel-headline">
+        <h2>Gestão inteligente.<br>Resultados <em>reais.</em></h2>
+        <p>Controle de tarefas, salas e comunicações corporativas em um único lugar, para equipes que precisam de agilidade.</p>
+    </div>
+
+    <div class="panel-footer">
+        &copy; 2025 SeOrganize — Todos os direitos reservados
+    </div>
+</div>
+
+<div class="panel-right">
+    <div class="login-card">
+
+        <h1>Bem-vindo de volta</h1>
+        <p class="subtitle">Acesse sua conta para continuar</p>
+
+        <div th:if="${erro != null}" class="error-box">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span th:text="${erro}"></span>
+        </div>
+
+        <form action="/fazer-login" method="POST">
+
+            <div class="field">
+                <label for="email">E-mail corporativo</label>
+                <div class="input-wrap">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                    </svg>
+                    <input type="email" id="email" name="email" placeholder="seu@empresa.com" required autocomplete="email">
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="senha">Senha</label>
+                <div class="input-wrap">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <input type="password" id="senha" name="senha" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <span class="btn-inner">
+                    Entrar no sistema
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </span>
+            </button>
+
+        </form>
+
+        <div class="login-footer">
+            Problemas para acessar? <a href="#">Fale com o suporte</a>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

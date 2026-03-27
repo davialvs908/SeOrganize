@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SeOrganize — Kanban</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --ink: #0f1117;
+            --ink-muted: #6b7280;
+            --surface: #ffffff;
+            --bg: #f3f4f6;
+            --accent: #22c55e;
+            --accent-dim: #16a34a;
+            --blue: #3b82f6;
+            --blue-dim: #2563eb;
+            --border: #e5e7eb;
+            --red: #ef4444;
+            --orange: #f97316;
+            --col-todo: #fef2f2;
+            --col-doing: #fff7ed;
+            --col-done: #f0fdf4;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            background: var(--ink);
+            padding: 0 2rem;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            flex-shrink: 0;
+        }
+
+        .topbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+
+        .topbar-logo {
+            width: 32px; height: 32px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .topbar-logo svg { width: 18px; height: 18px; }
+
+        .topbar-name {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.15rem; color: #fff; letter-spacing: -0.3px;
+        }
+
+        .topbar-sep { width: 1px; height: 18px; background: rgba(255,255,255,.15); margin: 0 12px; }
+
+        .topbar-section {
+            font-size: 0.78rem; font-weight: 500;
+            color: rgba(255,255,255,.45);
+            letter-spacing: 1px; text-transform: uppercase;
+        }
+
+        .topbar-right { display: flex; align-items: center; gap: 8px; }
+
+        .btn-top {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.82rem; font-weight: 600;
+            cursor: pointer; text-decoration: none; border: none;
+            transition: background .15s, transform .1s;
+        }
+        .btn-top:active { transform: scale(.97); }
+        .btn-top svg { width: 14px; height: 14px; }
+
+        .btn-ghost  { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.15); }
+        .btn-ghost:hover { background: rgba(255,255,255,.18); }
+
+        .btn-sair   { background: rgba(239,68,68,.15); color: #fca5a5; border: 1px solid rgba(239,68,68,.25); }
+        .btn-sair:hover { background: rgba(239,68,68,.25); }
+
+        .btn-primary-top {
+            background: var(--accent); color: #0f1117;
+            border: none; padding: 8px 16px; border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 6px;
+            transition: background .15s, transform .1s;
+        }
+        .btn-primary-top:hover { background: var(--accent-dim); color: #fff; }
+        .btn-primary-top:active { transform: scale(.97); }
+        .btn-primary-top svg { width: 15px; height: 15px; }
+
+        .board-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1.5rem 2rem 1rem;
+        }
+
+        .board-header h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.6rem; color: var(--ink); letter-spacing: -0.4px;
+        }
+
+        .board-header p { font-size: 0.88rem; color: var(--ink-muted); margin-top: 2px; }
+
+        .board {
+            display: flex;
+            gap: 1.25rem;
+            padding: 0 2rem 2rem;
+            overflow-x: auto;
+            flex: 1;
+            align-items: flex-start;
+        }
+
+        .board::-webkit-scrollbar { height: 6px; }
+        .board::-webkit-scrollbar-track { background: transparent; }
+        .board::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+
+        .col {
+            min-width: 300px;
+            width: 300px;
+            flex-shrink: 0;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 160px);
+        }
+
+        .col-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 1rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .col-label {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.82rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.6px;
+        }
+
+        .col-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .dot-red    { background: var(--red); }
+        .dot-orange { background: var(--orange); }
+        .dot-green  { background: var(--accent); }
+
+        .col-todo   .col-label { color: #b91c1c; }
+        .col-doing  .col-label { color: #c2410c; }
+        .col-done   .col-label { color: var(--accent-dim); }
+
+        .col-count {
+            font-size: 0.75rem; font-weight: 700;
+            padding: 2px 9px; border-radius: 20px;
+        }
+
+        .col-todo  .col-count { background: #fee2e2; color: #b91c1c; }
+        .col-doing .col-count { background: #ffedd5; color: #c2410c; }
+        .col-done  .col-count { background: #dcfce7; color: var(--accent-dim); }
+
+        .col-body {
+            padding: 0.75rem;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .col-body::-webkit-scrollbar { width: 4px; }
+        .col-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .task-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            transition: box-shadow .15s, transform .15s;
+            animation: fadeUp .2s ease both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        .task-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.08); transform: translateY(-1px); }
+
+        .col-todo  .task-card { border-left: 3px solid var(--red); }
+        .col-doing .task-card { border-left: 3px solid var(--orange); }
+        .col-done  .task-card { border-left: 3px solid var(--accent); opacity: .85; }
+
+        .task-title {
+            font-size: 0.92rem; font-weight: 600; color: var(--ink);
+            margin-bottom: 5px; line-height: 1.35;
+        }
+
+        .col-done .task-title { color: var(--ink-muted); text-decoration: line-through; }
+
+        .task-desc {
+            font-size: 0.82rem; color: var(--ink-muted);
+            line-height: 1.5; margin-bottom: 10px;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+
+        .task-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            border-top: 1px solid var(--border);
+            padding-top: 9px;
+            margin-top: 2px;
+        }
+
+        .task-people {
+            font-size: 0.75rem; color: var(--ink-muted);
+            display: flex; align-items: center; gap: 4px;
+            flex: 1; min-width: 0;
+        }
+
+        .task-people svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+        .task-people span {
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            font-weight: 500; color: var(--ink);
+        }
+
+        .task-actions { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+
+        .btn-icon {
+            width: 30px; height: 30px;
+            border-radius: 7px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--ink-muted);
+            transition: background .12s, color .12s;
+        }
+
+        .btn-icon svg { width: 13px; height: 13px; }
+        .btn-icon:hover { background: var(--bg); color: var(--ink); }
+
+        .btn-chat {
+            display: flex; align-items: center; gap: 5px;
+            padding: 5px 10px; border-radius: 7px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.75rem; font-weight: 600;
+            color: var(--ink-muted); cursor: pointer;
+            transition: background .12s;
+        }
+
+        .btn-chat svg { width: 13px; height: 13px; }
+        .btn-chat:hover { background: var(--bg); color: var(--ink); }
+
+        .chat-count {
+            font-size: 0.7rem; font-weight: 700;
+            background: var(--blue); color: #fff;
+            padding: 1px 6px; border-radius: 10px;
+        }
+
+        .btn-move {
+            width: 28px; height: 28px; border-radius: 7px; border: none;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: background .12s, transform .1s;
+        }
+        .btn-move:active { transform: scale(.93); }
+        .btn-move svg { width: 13px; height: 13px; }
+
+        .btn-forward { background: var(--accent); color: #0f1117; }
+        .btn-forward:hover { background: var(--accent-dim); color: #fff; }
+
+        .btn-back { background: #f3f4f6; color: var(--ink-muted); border: 1px solid var(--border); }
+        .btn-back:hover { background: var(--border); }
+
+        .btn-reopen { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+        .btn-reopen:hover { background: #ffedd5; }
+
+        .btn-complete {
+            display: flex; align-items: center; gap: 5px;
+            padding: 5px 12px; border-radius: 7px; border: none;
+            background: var(--accent); color: #0f1117;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.78rem; font-weight: 700;
+            cursor: pointer; transition: background .12s;
+        }
+        .btn-complete:hover { background: var(--accent-dim); color: #fff; }
+        .btn-complete svg { width: 13px; height: 13px; }
+
+        .col-empty {
+            text-align: center; padding: 2rem 1rem;
+            color: var(--ink-muted); font-size: 0.82rem;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(15,17,23,.5);
+            z-index: 300;
+            align-items: center; justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal-box {
+            background: var(--surface);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            width: 100%; max-width: 480px;
+            max-height: 90vh;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            animation: modalIn .2s cubic-bezier(.22,.68,0,1.2) both;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(.95) translateY(10px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        .modal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .modal-title {
+            font-size: 1rem; font-weight: 600; color: var(--ink);
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .modal-title svg { width: 17px; height: 17px; color: var(--blue); }
+
+        .btn-close-modal {
+            width: 30px; height: 30px; border-radius: 7px;
+            border: 1px solid var(--border); background: var(--bg);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            color: var(--ink-muted); transition: background .12s;
+        }
+        .btn-close-modal:hover { background: var(--border); }
+        .btn-close-modal svg { width: 14px; height: 14px; }
+
+        .modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; }
+
+        .mfield { margin-bottom: 1.1rem; }
+
+        .mfield label {
+            display: block; font-size: 0.75rem; font-weight: 600;
+            color: var(--ink-muted); text-transform: uppercase;
+            letter-spacing: 0.4px; margin-bottom: 0.4rem;
+        }
+
+        .mfield input,
+        .mfield textarea {
+            width: 100%; padding: 10px 13px;
+            border: 1.5px solid var(--border); border-radius: 9px;
+            font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+            color: var(--ink); background: var(--surface);
+            outline: none; transition: border-color .15s, box-shadow .15s;
+        }
+
+        .mfield textarea { resize: vertical; min-height: 80px; }
+
+        .mfield input::placeholder,
+        .mfield textarea::placeholder { color: #c0c4cc; }
+
+        .mfield input:focus,
+        .mfield textarea:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 4px rgba(59,130,246,.12);
+        }
+
+        .checkbox-list {
+            border: 1.5px solid var(--border); border-radius: 9px;
+            padding: 10px 12px; max-height: 140px; overflow-y: auto;
+            background: var(--bg);
+            display: flex; flex-direction: column; gap: 6px;
+        }
+
+        .checkbox-item {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.875rem; color: var(--ink); cursor: pointer;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 15px; height: 15px; padding: 0;
+            accent-color: var(--blue); cursor: pointer;
+            border: none;
+        }
+
+        .btn-submit-modal {
+            width: 100%; padding: 12px;
+            background: var(--blue); color: #fff;
+            border: none; border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.92rem; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center;
+            justify-content: center; gap: 8px;
+            margin-top: 0.25rem;
+            transition: background .15s, transform .1s;
+        }
+        .btn-submit-modal:hover { background: var(--blue-dim); }
+        .btn-submit-modal:active { transform: scale(.98); }
+        .btn-submit-modal svg { width: 16px; height: 16px; }
+
+        .chat-meta {
+            background: var(--bg); border-radius: 9px;
+            padding: 10px 14px; margin-bottom: 1rem;
+            font-size: 0.82rem;
+        }
+
+        .chat-meta strong { color: var(--ink); font-weight: 600; display: block; margin-bottom: 2px; }
+        .chat-meta p { color: var(--ink-muted); line-height: 1.45; margin-bottom: 6px; }
+        .chat-meta span { font-size: 0.75rem; color: var(--ink-muted); }
+
+        .chat-messages {
+            border: 1px solid var(--border); border-radius: 9px;
+            padding: 10px; max-height: 220px; overflow-y: auto;
+            background: #fafafa; margin-bottom: 1rem;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar { width: 4px; }
+        .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .msg-bubble {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 9px; padding: 9px 12px;
+            border-left: 3px solid var(--blue);
+        }
+
+        .msg-header {
+            display: flex; justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .msg-author { font-size: 0.78rem; font-weight: 600; color: var(--ink); }
+        .msg-time   { font-size: 0.72rem; color: var(--ink-muted); }
+        .msg-text   { font-size: 0.85rem; color: var(--ink-muted); line-height: 1.45; }
+
+        .chat-empty { text-align: center; padding: 1.5rem; color: var(--ink-muted); font-size: 0.82rem; }
+
+        .chat-input-row { display: flex; gap: 8px; }
+
+        .chat-input-row input {
+            flex: 1; padding: 10px 13px;
+            border: 1.5px solid var(--border); border-radius: 9px;
+            font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+            color: var(--ink); outline: none;
+            transition: border-color .15s, box-shadow .15s;
+        }
+
+        .chat-input-row input:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 4px rgba(59,130,246,.12);
+        }
+
+        .btn-send {
+            width: 40px; height: 40px; border-radius: 9px;
+            background: var(--blue); color: #fff; border: none;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: background .12s;
+        }
+
+        .btn-send:hover { background: var(--blue-dim); }
+        .btn-send svg { width: 16px; height: 16px; }
+
+        .btn-email {
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 12px; border-radius: 8px;
+            border: 1px solid var(--border); background: var(--bg);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.78rem; font-weight: 600;
+            color: var(--ink-muted); cursor: pointer;
+            transition: background .12s;
+            margin-bottom: 1rem;
+        }
+        .btn-email:hover { background: var(--border); color: var(--ink); }
+        .btn-email svg { width: 14px; height: 14px; }
+    </style>
+</head>
+<body>
+
+<nav class="topbar">
+    <div class="topbar-brand">
+        <div class="topbar-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#0f1117" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+        </div>
+        <span class="topbar-name">SeOrganize</span>
+        <div class="topbar-sep"></div>
+        <span class="topbar-section">Quadro Kanban</span>
+    </div>
+
+    <div class="topbar-right">
+        <a th:if="${usuarioLogado.perfil == 'COLABORADOR'}" href="/usuario" class="btn-top btn-ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Portal
+        </a>
+        <a th:if="${usuarioLogado.perfil == 'RECEPCAO'}" href="/recepcao" class="btn-top btn-ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Recepção
+        </a>
+        <a th:if="${usuarioLogado.perfil == 'ADMIN'}" href="/admin" class="btn-top btn-ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Painel TI
+        </a>
+        <a href="/sair" class="btn-top btn-sair">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Sair
+        </a>
+    </div>
+</nav>
+
+<div class="board-header">
+    <div>
+        <h1>Quadro de Solicitações</h1>
+        <p>Gerencie tarefas e acompanhe o progresso da equipe.</p>
+    </div>
+    <button class="btn-primary-top" onclick="document.getElementById('modalNovaTarefa').classList.add('open')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nova Tarefa
+    </button>
+</div>
+
+<div class="board">
+
+    <div class="col col-todo">
+        <div class="col-header">
+            <div class="col-label">
+                <span class="col-dot dot-red"></span>
+                A Fazer
+            </div>
+            <span class="col-count" th:text="${#lists.size(tarefasAFazer)}">0</span>
+        </div>
+        <div class="col-body">
+            <div th:each="tarefa : ${tarefasAFazer}" class="task-card">
+                <div class="task-title" th:text="${tarefa.titulo}"></div>
+                <div class="task-desc" th:text="${tarefa.descricao}"></div>
+                <div class="task-footer">
+                    <div class="task-people">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <span th:each="resp, i : ${tarefa.responsaveis}" th:text="${resp.nome} + ${!i.last ? ', ' : ''}"></span>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-chat" th:onclick="'openChat(' + ${tarefa.id} + ')'">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            <span class="chat-count" th:text="${#lists.size(tarefa.comentarios)}">0</span>
+                        </button>
+                        <form th:action="@{/mover-tarefa/{id}(id=${tarefa.id})}" method="POST" style="margin:0">
+                            <input type="hidden" name="novoStatus" value="FAZENDO">
+                            <button type="submit" class="btn-move btn-forward" title="Iniciar">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div th:if="${#lists.isEmpty(tarefasAFazer)}" class="col-empty">Nenhuma tarefa pendente.</div>
+        </div>
+    </div>
+
+    <div class="col col-doing">
+        <div class="col-header">
+            <div class="col-label">
+                <span class="col-dot dot-orange"></span>
+                Fazendo
+            </div>
+            <span class="col-count" th:text="${#lists.size(tarefasFazendo)}">0</span>
+        </div>
+        <div class="col-body">
+            <div th:each="tarefa : ${tarefasFazendo}" class="task-card">
+                <div class="task-title" th:text="${tarefa.titulo}"></div>
+                <div class="task-desc" th:text="${tarefa.descricao}"></div>
+                <div class="task-footer">
+                    <div class="task-people">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <span th:each="resp, i : ${tarefa.responsaveis}" th:text="${resp.nome} + ${!i.last ? ', ' : ''}"></span>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-chat" th:onclick="'openChat(' + ${tarefa.id} + ')'">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            <span class="chat-count" th:text="${#lists.size(tarefa.comentarios)}">0</span>
+                        </button>
+                        <form th:action="@{/mover-tarefa/{id}(id=${tarefa.id})}" method="POST" style="margin:0">
+                            <input type="hidden" name="novoStatus" value="A_FAZER">
+                            <button type="submit" class="btn-move btn-back" title="Pausar">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                            </button>
+                        </form>
+                        <form th:action="@{/mover-tarefa/{id}(id=${tarefa.id})}" method="POST" style="margin:0">
+                            <input type="hidden" name="novoStatus" value="CONCLUIDO">
+                            <button type="submit" class="btn-complete">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                Concluir
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div th:if="${#lists.isEmpty(tarefasFazendo)}" class="col-empty">Nenhuma tarefa em andamento.</div>
+        </div>
+    </div>
+
+    <div class="col col-done">
+        <div class="col-header">
+            <div class="col-label">
+                <span class="col-dot dot-green"></span>
+                Concluído
+            </div>
+            <span class="col-count" th:text="${#lists.size(tarefasConcluidas)}">0</span>
+        </div>
+        <div class="col-body">
+            <div th:each="tarefa : ${tarefasConcluidas}" class="task-card">
+                <div class="task-title" th:text="${tarefa.titulo}"></div>
+                <div class="task-desc" th:text="${tarefa.descricao}"></div>
+                <div class="task-footer">
+                    <div class="task-people">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        <span th:each="resp, i : ${tarefa.responsaveis}" th:text="${resp.nome} + ${!i.last ? ', ' : ''}"></span>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-chat" th:onclick="'openChat(' + ${tarefa.id} + ')'">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            <span class="chat-count" th:text="${#lists.size(tarefa.comentarios)}">0</span>
+                        </button>
+                        <form th:action="@{/mover-tarefa/{id}(id=${tarefa.id})}" method="POST" style="margin:0">
+                            <input type="hidden" name="novoStatus" value="FAZENDO">
+                            <button type="submit" class="btn-move btn-reopen" title="Reabrir">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.21"/></svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div th:if="${#lists.isEmpty(tarefasConcluidas)}" class="col-empty">Nenhuma tarefa concluída ainda.</div>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal-overlay" id="modalNovaTarefa" onclick="if(event.target===this) this.classList.remove('open')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Abrir Nova Solicitação
+            </div>
+            <button class="btn-close-modal" onclick="document.getElementById('modalNovaTarefa').classList.remove('open')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form action="/criar-tarefa" method="POST">
+                <input type="hidden" name="solicitante" th:value="${usuarioLogado.nome}">
+
+                <div class="mfield">
+                    <label>Título curto</label>
+                    <input type="text" name="titulo" placeholder="Ex: Internet caindo na sala 2" required>
+                </div>
+
+                <div class="mfield">
+                    <label>Responsáveis</label>
+                    <div class="checkbox-list">
+                        <label class="checkbox-item" th:each="user : ${todosUsuarios}">
+                            <input type="checkbox" name="responsaveisIds" th:value="${user.id}">
+                            <span th:text="${user.nome} + ' · ' + ${user.perfil}"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mfield">
+                    <label>Descrição detalhada</label>
+                    <textarea name="descricao" placeholder="Explique o problema ou solicitação..." required></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit-modal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    Criar e Enviar ao Quadro
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div th:each="t : ${todasTarefas}">
+    <div class="modal-overlay" th:id="'modalChat-' + ${t.id}" onclick="if(event.target===this) this.classList.remove('open')">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Chamado <span th:text="'#' + ${t.id}"></span>
+                </div>
+                <button class="btn-close-modal" th:onclick="'document.getElementById(\'modalChat-' + ${t.id} + '\').classList.remove(\'open\')'">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <form th:action="@{/enviar-historico-email/{id}(id=${t.id})}" method="POST" style="margin:0">
+                    <button type="submit" class="btn-email">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                        Enviar histórico por e-mail
+                    </button>
+                </form>
+
+                <div class="chat-meta">
+                    <strong th:text="${t.titulo}">Título</strong>
+                    <p th:text="${t.descricao}">Descrição...</p>
+                    <span th:text="'Criado por ' + ${t.solicitante}"></span>
+                </div>
+
+                <div class="chat-messages">
+                    <div th:if="${#lists.isEmpty(t.comentarios)}" class="chat-empty">
+                        Nenhum comentário ainda. Inicie a conversa!
+                    </div>
+                    <div th:each="c : ${t.comentarios}" class="msg-bubble">
+                        <div class="msg-header">
+                            <span class="msg-author" th:text="${c.autor}"></span>
+                            <span class="msg-time" th:text="${#temporals.format(c.dataCriacao, 'dd/MM HH:mm')}"></span>
+                        </div>
+                        <div class="msg-text" th:text="${c.texto}"></div>
+                    </div>
+                </div>
+
+                <form th:action="@{/adicionar-comentario/{id}(id=${t.id})}" method="POST">
+                    <div class="chat-input-row">
+                        <input type="text" name="texto" placeholder="Escreva uma atualização..." required autocomplete="off">
+                        <button type="submit" class="btn-send">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openChat(id) {
+        document.getElementById('modalChat-' + id).classList.add('open');
+    }
+</script>
+
+</body>
+</html>

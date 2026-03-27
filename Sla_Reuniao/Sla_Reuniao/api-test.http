@@ -1,0 +1,24 @@
+### 1. Criar uma nova Sala de Reunião
+POST http://localhost:8080/api/salas
+Content-Type: application/json
+
+{
+  "nome": "Sala Alpha (Diretoria)",
+  "capacidade": 12,
+  "disponivel": true,
+  "recursos": "Projetor 4K, Videoconferência, Máquina de Café",
+  "localizacao": "10º Andar"
+
+}
+
+### 2. Registrar um Chamado de Urgência (Recepção)
+POST http://localhost:8080/api/chamados
+Content-Type: application/json
+
+{
+  "descricao": "O ar-condicionado da Sala Alpha parou de funcionar e a reunião começa em 10 minutos.",
+  "urgencia": "ALTA"
+}
+
+### 3. Consultar a Fila da Recepção
+GET http://localhost:8080/api/chamados/fila
