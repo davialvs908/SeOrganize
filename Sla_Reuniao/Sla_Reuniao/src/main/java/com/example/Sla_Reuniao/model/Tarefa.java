@@ -19,9 +19,9 @@ public class Tarefa {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String descricao;
 
-
     private String solicitante;
 
+    private Long solicitanteId;
 
     @ManyToMany
     @JoinTable(
@@ -36,15 +36,14 @@ public class Tarefa {
 
     private LocalDateTime dataCriacao;
 
-    @OneToMany(mappedBy = "tarefa", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "tarefa", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("dataCriacao ASC")
-    private List<Comentario> comentarios;
+    private List<Comentario> comentarios = new ArrayList<>();
 
     public Tarefa() {
         this.dataCriacao = LocalDateTime.now();
         this.status = "A_FAZER";
     }
-
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -58,6 +57,8 @@ public class Tarefa {
     public String getSolicitante() { return solicitante; }
     public void setSolicitante(String solicitante) { this.solicitante = solicitante; }
 
+    public Long getSolicitanteId() { return solicitanteId; }
+    public void setSolicitanteId(Long solicitanteId) { this.solicitanteId = solicitanteId; }
 
     public List<Usuario> getResponsaveis() { return responsaveis; }
     public void setResponsaveis(List<Usuario> responsaveis) { this.responsaveis = responsaveis; }

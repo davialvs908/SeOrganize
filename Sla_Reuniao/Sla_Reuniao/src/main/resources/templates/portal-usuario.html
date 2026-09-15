@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SeOrganize — Portal do Colaborador</title>
+    <title>SeOrganize · Portal do colaborador</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="/css/app.css">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
@@ -19,30 +20,30 @@
         body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; }
 
         .topbar { background:var(--ink); padding:0 2rem; height:60px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
-        .topbar-brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
+        .topbar-brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; cursor:pointer; }
         .topbar-logo { width:32px; height:32px; background:var(--accent); border-radius:8px; display:flex; align-items:center; justify-content:center; }
         .topbar-logo svg { width:18px; height:18px; }
         .topbar-name { font-family:'DM Serif Display',serif; font-size:1.15rem; color:#fff; letter-spacing:-.3px; }
         .topbar-sep { width:1px; height:18px; background:rgba(255,255,255,.15); margin:0 12px; }
-        .topbar-section { font-size:.78rem; font-weight:500; color:rgba(255,255,255,.45); letter-spacing:1px; text-transform:uppercase; }
+        .topbar-section { font-size:.8rem; font-weight:500; color:rgba(255,255,255,.5); text-transform:none; letter-spacing:0; }
         .topbar-right { display:flex; align-items:center; gap:10px; }
-        .topbar-greeting { font-size:.85rem; color:rgba(255,255,255,.5); padding-right:10px; border-right:1px solid rgba(255,255,255,.12); }
-        .topbar-greeting strong { color:rgba(255,255,255,.85); font-weight:500; }
-        .btn-top { display:flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.82rem; font-weight:600; cursor:pointer; text-decoration:none; border:none; transition:opacity .15s,transform .1s; }
-        .btn-top:active { transform:scale(.97); }
+        .user-chip { display:flex; align-items:center; gap:8px; padding-right:10px; border-right:1px solid rgba(255,255,255,.12); }
+        .topbar-greeting { font-size:.8rem; color:rgba(255,255,255,.7); max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .user-avatar { width:28px; height:28px; border-radius:50%; background:#1f2937; color:#e5e7eb; font-size:.68rem; font-weight:600; display:inline-flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.12); }
+        .btn-top { display:flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.82rem; font-weight:600; cursor:pointer; text-decoration:none; border:none; transition:background .15s; }
         .btn-top svg { width:14px; height:14px; }
         .btn-kanban { background:rgba(255,255,255,.1); color:#fff; border:1px solid rgba(255,255,255,.15); }
         .btn-kanban:hover { background:rgba(255,255,255,.18); }
         .btn-sair { background:rgba(239,68,68,.15); color:#fca5a5; border:1px solid rgba(239,68,68,.25); }
         .btn-sair:hover { background:rgba(239,68,68,.25); }
+        .topbar-right form { margin:0; display:flex; }
 
         .main { max-width:1100px; margin:0 auto; padding:2rem 1.5rem 4rem; }
         .page-header { margin-bottom:2rem; }
         .page-header h1 { font-family:'DM Serif Display',serif; font-size:1.8rem; color:var(--ink); letter-spacing:-.4px; }
         .page-header p { font-size:.9rem; color:var(--ink-muted); margin-top:.25rem; }
 
-        .alert { display:flex; align-items:flex-start; gap:10px; padding:14px 16px; border-radius:10px; font-size:.875rem; font-weight:500; margin-bottom:1.5rem; animation:fadeIn .3s ease both; }
-        @keyframes fadeIn { from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none} }
+        .alert { display:flex; align-items:flex-start; gap:10px; padding:14px 16px; border-radius:10px; font-size:.875rem; font-weight:500; margin-bottom:1.5rem; }
         .alert svg { flex-shrink:0; margin-top:1px; }
         .alert-danger  { background:var(--err-bg); color:var(--err-txt); border:1px solid var(--err-bdr); }
         .alert-success { background:var(--ok-bg);  color:var(--ok-txt);  border:1px solid var(--ok-bdr); }
@@ -58,8 +59,15 @@
         .card-title svg { width:18px; height:18px; }
 
         .field { margin-bottom:1.1rem; }
-        .field label { display:block; font-size:.78rem; font-weight:600; color:var(--ink-muted); letter-spacing:.5px; text-transform:uppercase; margin-bottom:.45rem; }
-        .field input,.field select,.field textarea { width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:9px; font-family:'DM Sans',sans-serif; font-size:.9rem; color:var(--ink); background:var(--surface); outline:none; transition:border-color .15s,box-shadow .15s; appearance:none; -webkit-appearance:none; }
+        .field label { display:block; font-size:.8rem; font-weight:500; color:#4b5563; margin-bottom:.4rem; text-transform:none; letter-spacing:0; }
+        .field input,.field select,.field textarea { width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:9px; font-family:'DM Sans',sans-serif; font-size:.9rem; color:var(--ink); background:var(--surface); outline:none; transition:border-color .15s,box-shadow .15s; }
+        .field select, .agenda-box select {
+            appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.4'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
         .field textarea { resize:vertical; min-height:80px; }
         .field input::placeholder,.field textarea::placeholder { color:#c0c4cc; }
         .field input:focus,.field select:focus,.field textarea:focus { border-color:var(--accent); box-shadow:0 0 0 4px var(--fg-green); }
@@ -67,24 +75,34 @@
         .field input.readonly-field { background:#f9fafb; color:var(--ink-muted); cursor:not-allowed; font-weight:500; }
         .row-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
         .agenda-box { background:#eff6ff; border:1.5px dashed #93c5fd; border-radius:10px; padding:1rem; margin-bottom:1.1rem; }
-        .agenda-box label { display:block; font-size:.78rem; font-weight:600; color:var(--blue-dim); letter-spacing:.5px; text-transform:uppercase; margin-bottom:.45rem; }
-        .agenda-box select { width:100%; padding:9px 14px; border:1.5px solid #bfdbfe; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.88rem; color:var(--ink); background:#fff; outline:none; appearance:none; -webkit-appearance:none; transition:border-color .15s,box-shadow .15s; }
+        .agenda-box label { display:block; font-size:.8rem; font-weight:500; color:var(--blue-dim); margin-bottom:.4rem; text-transform:none; letter-spacing:0; }
+        .agenda-box select { width:100%; padding:9px 32px 9px 14px; border:1.5px solid #bfdbfe; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.88rem; color:var(--ink); background-color:#fff; outline:none; transition:border-color .15s,box-shadow .15s; }
         .agenda-box select:focus { border-color:var(--blue); box-shadow:0 0 0 4px var(--fg-blue); }
 
-        .btn-main { width:100%; padding:12px; border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:.92rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:.25rem; transition:background .15s,transform .1s; }
-        .btn-main:active { transform:scale(.98); }
+        .btn-main { width:100%; padding:12px; border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:.92rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:.25rem; transition:background .15s; }
         .btn-main svg { width:16px; height:16px; }
         .btn-green { background:var(--accent); color:#0f1117; } .btn-green:hover { background:var(--accent-dim); color:#fff; }
         .btn-blue  { background:var(--blue);   color:#fff;    } .btn-blue:hover  { background:var(--blue-dim); }
 
-        .section-label { font-size:.78rem; font-weight:600; color:var(--ink-muted); text-transform:uppercase; letter-spacing:.5px; margin:1.5rem 0 .75rem; display:flex; align-items:center; gap:6px; }
+        .section-label { font-size:.8rem; font-weight:600; color:var(--ink-muted); margin:1.5rem 0 .75rem; display:flex; align-items:center; gap:6px; text-transform:none; }
         .section-label svg { width:13px; height:13px; }
         .rooms-list { display:flex; flex-direction:column; gap:6px; }
         .room-row { display:flex; align-items:center; justify-content:space-between; padding:9px 12px; background:#f9fafb; border-radius:8px; border:1px solid var(--border); font-size:.85rem; }
         .room-badge { font-size:.75rem; font-weight:600; background:#dcfce7; color:var(--accent-dim); padding:3px 10px; border-radius:20px; }
         .room-time { color:var(--ink-muted); }
         .room-who  { color:var(--ink-muted); font-size:.8rem; }
+        .room-row form { margin:0; }
         .empty-state { text-align:center; padding:1.5rem; color:var(--ink-muted); font-size:.875rem; }
+
+        .kpi-row { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:1.75rem; }
+        @media(max-width:700px){ .kpi-row{grid-template-columns:1fr} }
+        .kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1rem 1.15rem; text-decoration:none; color:inherit; display:block; transition:box-shadow .15s; }
+        .kpi-card:hover { box-shadow:0 4px 14px rgba(0,0,0,.07); }
+        .kpi-value { font-family:'DM Serif Display',serif; font-size:1.7rem; margin-top:4px; font-variant-numeric: tabular-nums; }
+        .kpi-label { font-size:.75rem; font-weight:500; color:var(--ink-muted); text-transform:none; }
+        .kpi-todo .kpi-value { color:#b91c1c; }
+        .kpi-doing .kpi-value { color:#c2410c; }
+        .kpi-done .kpi-value { color:var(--accent-dim); }
 
         .calls-card { margin-top:1.5rem; background:var(--surface); border-radius:16px; border:1px solid var(--border); padding:1.75rem; }
         .calls-head { display:flex; align-items:center; justify-content:space-between; padding-bottom:1rem; margin-bottom:1.25rem; border-bottom:1px solid var(--border); }
@@ -94,32 +112,45 @@
         .calls-head h2 { font-size:1rem; font-weight:600; color:var(--ink); }
         .calls-head p  { font-size:.8rem; color:var(--ink-muted); margin-top:1px; }
         .pending-pill { display:flex; align-items:center; gap:6px; font-size:.75rem; font-weight:600; color:#92400e; background:#fef3c7; border:1px solid #fde68a; padding:4px 12px; border-radius:20px; }
-        .blink-dot { width:6px; height:6px; border-radius:50%; background:#f59e0b; animation:blink 1.8s infinite; }
-        @keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
+        .status-dot { width:6px; height:6px; border-radius:50%; background:#f59e0b; }
         .done-pill  { display:flex; align-items:center; gap:6px; font-size:.75rem; font-weight:600; color:var(--accent-dim); background:#dcfce7; border:1px solid #bbf7d0; padding:4px 12px; border-radius:20px; }
         .calls-list { display:flex; flex-direction:column; gap:8px; }
         .call-row {
             display:grid; grid-template-columns:30px 1fr auto auto;
             align-items:center; gap:12px; padding:12px 14px;
             border-radius:10px; border:1px solid var(--border); background:var(--surface);
-            animation:fadeIn .2s ease both;
         }
-        .call-row.done    { background:#f0fdf4; border-color:#bbf7d0; }
-        .call-row.pending { background:#fffbeb; border-color:#fde68a; }
+        @media(max-width:700px){
+            .call-row { grid-template-columns:30px 1fr; }
+            .call-actions, .badge-urg { grid-column:2; justify-self:start; }
+        }
+        .call-row.done     { background:#f0fdf4; border-color:#bbf7d0; }
+        .call-row.pending  { background:#fffbeb; border-color:#fde68a; }
+        .call-row.progress { background:#eff6ff; border-color:#bfdbfe; }
         .call-row-ico { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-        .call-row-ico.done    { background:#dcfce7; color:var(--accent-dim); }
-        .call-row-ico.pending { background:#fef3c7; color:#92400e; }
+        .call-row-ico.done     { background:#dcfce7; color:var(--accent-dim); }
+        .call-row-ico.pending  { background:#fef3c7; color:#92400e; }
+        .call-row-ico.progress { background:#dbeafe; color:var(--blue-dim); }
         .call-row-ico svg { width:14px; height:14px; }
         .call-row-info { min-width:0; }
         .call-dest   { font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         .call-reason { font-size:.75rem; color:var(--ink-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .badge-urg { font-size:.7rem; font-weight:700; padding:3px 10px; border-radius:20px; text-transform:uppercase; letter-spacing:.3px; white-space:nowrap; }
+        .badge-urg { font-size:.72rem; font-weight:600; padding:3px 10px; border-radius:20px; white-space:nowrap; }
         .urg-ALTA   { background:#fee2e2; color:#b91c1c; }
         .urg-NORMAL { background:#ffedd5; color:#c2410c; }
         .urg-BAIXA  { background:#dcfce7; color:var(--accent-dim); }
-        .badge-status { font-size:.7rem; font-weight:700; padding:3px 10px; border-radius:20px; text-transform:uppercase; letter-spacing:.3px; white-space:nowrap; }
-        .st-done    { background:#dcfce7; color:var(--accent-dim); }
-        .st-pending { background:#fef3c7; color:#92400e; }
+        .badge-status { font-size:.72rem; font-weight:600; padding:3px 10px; border-radius:20px; white-space:nowrap; }
+        .st-done     { background:#dcfce7; color:var(--accent-dim); }
+        .st-pending  { background:#fef3c7; color:#92400e; }
+        .st-progress { background:#dbeafe; color:var(--blue-dim); }
+        .call-actions { display:flex; align-items:center; gap:8px; }
+        .call-actions form { margin:0; }
+        .btn-cancel {
+            font-family:'DM Sans',sans-serif; font-size:.72rem; font-weight:600;
+            padding:5px 10px; border-radius:8px; cursor:pointer; white-space:nowrap;
+            border:1px solid #fecaca; background:#fef2f2; color:#b91c1c;
+        }
+        .btn-cancel:hover { background:#fee2e2; }
         .calls-empty { text-align:center; padding:2rem; color:var(--ink-muted); font-size:.875rem; background:#fafafa; border-radius:10px; border:1px solid var(--border); }
 
         .flatpickr-input { background:var(--surface) !important; }
@@ -128,7 +159,7 @@
 <body>
 
 <nav class="topbar">
-    <div class="topbar-brand">
+    <a class="topbar-brand" href="/" aria-label="Voltar ao início">
         <div class="topbar-logo">
             <svg viewBox="0 0 24 24" fill="none" stroke="#0f1117" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
@@ -136,26 +167,36 @@
         </div>
         <span class="topbar-name">SeOrganize</span>
         <div class="topbar-sep"></div>
-        <span class="topbar-section">Portal do Colaborador</span>
-    </div>
+        <span class="topbar-section">Colaborador</span>
+    </a>
     <div class="topbar-right">
-        <span class="topbar-greeting">Olá, <strong th:text="${usuarioLogado.nome}">Usuário</strong></span>
-        <a href="/kanban" class="btn-top btn-kanban">
+        <div class="user-chip">
+            <span class="user-avatar" th:text="${usuarioLogado.iniciais}">SO</span>
+            <span class="topbar-greeting" th:text="${usuarioLogado.nome}">Usuário</span>
+        </div>
+        <a th:href="@{/kanban}" class="btn-top btn-kanban">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
             Kanban
         </a>
-        <a href="/sair" class="btn-top btn-sair">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Sair
+        <a th:href="@{/alterar-senha}" class="btn-top btn-kanban">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Alterar senha
         </a>
+        <form th:action="@{/sair}" method="POST">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="btn-top btn-sair">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Sair
+            </button>
+        </form>
     </div>
 </nav>
 
 <main class="main">
 
     <div class="page-header">
-        <h1>Bom dia — o que você precisa hoje?</h1>
-        <p>Reserve uma sala ou solicite uma ligação pela recepção em segundos.</p>
+        <h1><span th:text="${saudacao}">Bom dia</span>, <span th:text="${#strings.substringBefore(usuarioLogado.nome + ' ', ' ')}">Ana</span></h1>
+        <p id="subtituloPortal">Reservas de sala e pedidos de ligação.</p>
     </div>
 
     <div th:if="${erroAgendamento}" class="alert alert-danger">
@@ -167,6 +208,21 @@
         <span th:text="${sucessoAgendamento}"></span>
     </div>
 
+    <div class="kpi-row">
+        <a href="/kanban" class="kpi-card kpi-todo">
+            <div class="kpi-label">A fazer</div>
+            <div class="kpi-value" th:text="${qtdAFazer}">0</div>
+        </a>
+        <a href="/kanban" class="kpi-card kpi-doing">
+            <div class="kpi-label">Em andamento</div>
+            <div class="kpi-value" th:text="${qtdFazendo}">0</div>
+        </a>
+        <a href="/kanban" class="kpi-card kpi-done">
+            <div class="kpi-label">Concluídas</div>
+            <div class="kpi-value" th:text="${qtdConcluido}">0</div>
+        </a>
+    </div>
+
     <div class="grid-2">
 
         <div class="card">
@@ -174,9 +230,9 @@
                 <div class="icon icon-green">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 </div>
-                Reserva de Salas
+                Reserva de salas
             </div>
-            <form action="/fazer-agendamento" method="POST">
+            <form th:action="@{/fazer-agendamento}" method="POST" data-loading-label="Reservando…">
                 <div class="field">
                     <label>Solicitante</label>
                     <input type="text" name="solicitante" th:value="${usuarioLogado.nome}" class="readonly-field" readonly>
@@ -184,23 +240,26 @@
                 <div class="field">
                     <label>Sala</label>
                     <select name="sala.id" required>
-                        <option value="">Escolha uma sala...</option>
-                        <option th:each="sala : ${listaDeSalas}" th:value="${sala.id}" th:text="${sala.nome} + ' — Capacidade: ' + ${sala.capacidade}"></option>
+                        <option value="">Selecione a sala</option>
+                        <option th:each="sala : ${listaDeSalas}"
+                                th:value="${sala.id}"
+                                th:text="${sala.nome} + ' · Capacidade: ' + ${sala.capacidade}">Sala</option>
+                        <option th:if="${listaDeSalas == null or #lists.isEmpty(listaDeSalas)}" disabled>Nenhuma sala cadastrada</option>
                     </select>
                 </div>
                 <div class="row-2">
                     <div class="field">
                         <label>Início</label>
-                        <input type="text" name="dataHoraInicio" class="datepicker-custom" placeholder="Data e hora..." required autocomplete="off">
+                        <input type="text" name="dataHoraInicio" class="datepicker-custom" placeholder="Data e hora" required autocomplete="off">
                     </div>
                     <div class="field">
                         <label>Término</label>
-                        <input type="text" name="dataHoraFim" class="datepicker-custom" placeholder="Data e hora..." required autocomplete="off">
+                        <input type="text" name="dataHoraFim" class="datepicker-custom" placeholder="Data e hora" required autocomplete="off">
                     </div>
                 </div>
                 <button type="submit" class="btn-main btn-green">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    Confirmar Reserva
+                    Reservar
                 </button>
             </form>
             <div class="section-label">
@@ -213,7 +272,22 @@
                     <span class="room-time" th:text="${#temporals.format(agenda.dataHoraInicio, 'dd/MM HH:mm')} + ' → ' + ${#temporals.format(agenda.dataHoraFim, 'HH:mm')}"></span>
                     <span class="room-who" th:text="${agenda.solicitante}"></span>
                 </div>
-                <div th:if="${#lists.isEmpty(listaAgendamentos)}" class="empty-state">Todas as salas estão livres agora.</div>
+                <div th:if="${#lists.isEmpty(listaAgendamentos)}" class="empty-state">Nenhuma sala ocupada no momento.</div>
+            </div>
+            <div class="section-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Minhas reservas hoje
+            </div>
+            <div class="rooms-list">
+                <div th:each="reserva : ${minhasReservasHoje}" class="room-row">
+                    <span class="room-badge" th:text="${reserva.sala.nome}"></span>
+                    <span class="room-time" th:text="${#temporals.format(reserva.dataHoraInicio, 'HH:mm')} + ' → ' + ${#temporals.format(reserva.dataHoraFim, 'HH:mm')}"></span>
+                    <form th:if="${reserva.status != 'CANCELADO'}" th:action="@{/cancelar-agendamento/{id}(id=${reserva.id})}" method="POST">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button type="submit" class="btn-cancel">Cancelar</button>
+                    </form>
+                </div>
+                <div th:if="${minhasReservasHoje == null or #lists.isEmpty(minhasReservasHoje)}" class="empty-state">Nenhuma reserva sua hoje.</div>
             </div>
         </div>
 
@@ -222,42 +296,42 @@
                 <div class="icon icon-blue">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.8a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.38 16z"/></svg>
                 </div>
-                Solicitar Ligação
+                Pedido de ligação
             </div>
-            <form action="/fazer-pedido-ligacao" method="POST">
-                <input type="hidden" name="nomeColaborador" th:value="${usuarioLogado.nome}">
+            <form th:action="@{/fazer-pedido-ligacao}" method="POST" data-loading-label="Enviando…">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <div class="agenda-box">
-                    <label>Agenda Corporativa (opcional)</label>
-                    <select name="contatoAgenda.id">
-                        <option value="">— Digitar número manualmente —</option>
+                    <label>Agenda corporativa (opcional)</label>
+                    <select name="contatoAgendaId">
+                        <option value="">Informar número</option>
                         <option th:each="contato : ${listaAgenda}" th:value="${contato.id}" th:text="${contato.nome} + ' · ' + ${contato.departamento}"></option>
                     </select>
                 </div>
                 <div class="row-2">
                     <div class="field field-blue">
-                        <label>Com quem falar?</label>
-                        <input type="text" name="destinatario" placeholder="Ex: Cliente XYZ" required>
+                        <label>Destinatário</label>
+                        <input type="text" name="destinatario" placeholder="Nome ou empresa" required>
                     </div>
                     <div class="field field-blue">
-                        <label>Telefone (manual)</label>
-                        <input type="tel" name="telefone" placeholder="(11) 99999-9999">
+                        <label>Telefone</label>
+                        <input type="tel" name="telefone" placeholder="(11) 99999 9999">
                     </div>
                 </div>
                 <div class="field field-blue">
-                    <label>Motivo / Recado</label>
-                    <textarea name="motivoLigacao" placeholder="Descreva o assunto da ligação..." required></textarea>
+                    <label>Motivo</label>
+                    <textarea name="motivoLigacao" placeholder="Assunto da ligação" required></textarea>
                 </div>
                 <div class="field field-blue">
                     <label>Urgência</label>
                     <select name="urgencia">
-                        <option value="BAIXA">🟢 Baixa — pode aguardar</option>
-                        <option value="NORMAL" selected>🟡 Normal — ligar hoje</option>
-                        <option value="ALTA">🔴 Alta — urgente</option>
+                        <option value="BAIXA">Baixa</option>
+                        <option value="NORMAL" selected>Normal</option>
+                        <option value="ALTA">Alta</option>
                     </select>
                 </div>
                 <button type="submit" class="btn-main btn-blue">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                    Enviar para a Recepção
+                    Enviar à recepção
                 </button>
             </form>
         </div>
@@ -271,27 +345,28 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.8a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.38 16z"/></svg>
                 </div>
                 <div>
-                    <h2>Minhas Ligações</h2>
-                    <p>Acompanhe o status dos seus pedidos</p>
+                    <h2>Minhas ligações</h2>
+                    <p>Pedidos enviados à recepção</p>
                 </div>
             </div>
             <div class="pending-pill" th:if="${minhasLigacoesPendentes != null and minhasLigacoesPendentes > 0}">
-                <span class="blink-dot"></span>
+                <span class="status-dot"></span>
                 <span th:text="${minhasLigacoesPendentes} + ' aguardando'"></span>
             </div>
             <div class="done-pill" th:if="${minhasLigacoesPendentes != null and minhasLigacoesPendentes == 0 and not #lists.isEmpty(minhasLigacoes)}">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                Tudo atendido!
+                Nenhuma pendente
             </div>
         </div>
 
         <div class="calls-list" th:if="${not #lists.isEmpty(minhasLigacoes)}">
             <div th:each="lig : ${minhasLigacoes}"
-                 th:class="'call-row ' + (${lig.concluida} ? 'done' : 'pending')">
+                 th:class="'call-row ' + (${lig.status == 'CONCLUIDO'} ? 'done' : (${lig.status == 'PENDENTE' or lig.status == 'CANCELADO'} ? 'pending' : 'progress'))">
 
-                <div th:class="'call-row-ico ' + (${lig.concluida} ? 'done' : 'pending')">
-                    <svg th:if="${lig.concluida}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    <svg th:if="${!lig.concluida}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <div th:class="'call-row-ico ' + (${lig.status == 'CONCLUIDO'} ? 'done' : (${lig.status == 'PENDENTE' or lig.status == 'CANCELADO'} ? 'pending' : 'progress'))">
+                    <svg th:if="${lig.status == 'CONCLUIDO'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg th:if="${lig.status == 'PENDENTE' or lig.status == 'CANCELADO'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <svg th:if="${lig.status != 'CONCLUIDO' and lig.status != 'PENDENTE' and lig.status != 'CANCELADO'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.8a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.38 16z"/></svg>
                 </div>
 
                 <div class="call-row-info">
@@ -306,15 +381,25 @@
                     <div class="call-reason" th:text="${lig.motivoLigacao}"></div>
                 </div>
 
-                <span th:class="'badge-urg urg-' + ${lig.urgencia}" th:text="${lig.urgencia}"></span>
+                <span th:if="${lig.urgencia == 'ALTA'}" class="badge-urg urg-ALTA">Alta</span>
+                <span th:if="${lig.urgencia == 'NORMAL'}" class="badge-urg urg-NORMAL">Normal</span>
+                <span th:if="${lig.urgencia == 'BAIXA'}" class="badge-urg urg-BAIXA">Baixa</span>
 
-                <span th:if="${lig.concluida}"  class="badge-status st-done">✓ Ligação feita</span>
-                <span th:if="${!lig.concluida}" class="badge-status st-pending">⏳ Aguardando</span>
+                <div class="call-actions">
+                    <span th:if="${lig.status == 'PENDENTE'}" class="badge-status st-pending">Pendente</span>
+                    <span th:if="${lig.status == 'CONCLUIDO'}" class="badge-status st-done">Concluído</span>
+                    <span th:if="${lig.status == 'CANCELADO'}" class="badge-status st-pending">Cancelado</span>
+                    <span th:if="${lig.status != 'PENDENTE' and lig.status != 'CONCLUIDO' and lig.status != 'CANCELADO'}" class="badge-status st-progress">Em curso</span>
+                    <form th:if="${lig.status == 'PENDENTE'}" th:action="@{/cancelar-ligacao/{id}(id=${lig.id})}" method="POST">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button type="submit" class="btn-cancel">Cancelar pedido</button>
+                    </form>
+                </div>
             </div>
         </div>
 
         <div class="calls-empty" th:if="${#lists.isEmpty(minhasLigacoes)}">
-            Você ainda não solicitou nenhuma ligação.
+            Nenhuma ligação enviada.
         </div>
     </div>
 
@@ -322,21 +407,24 @@
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+<script src="/js/ui.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        function initDatePicker() {
-            flatpickr(".datepicker-custom", {
-                enableTime: true,
-                time_24hr: true,
-                dateFormat: "Y-m-d\\TH:i",
-                altInput: true,
-                altFormat: "d/m/Y - H:i",
-                locale: "pt",
-                minDate: "today",
-                disableMobile: "true"
-            });
+        flatpickr(".datepicker-custom", {
+            enableTime: true,
+            time_24hr: true,
+            dateFormat: "Y-m-d\\TH:i",
+            altInput: true,
+            altFormat: "d/m/Y · H:i",
+            locale: "pt",
+            minDate: "today",
+            disableMobile: "true"
+        });
+        var sub = document.getElementById('subtituloPortal');
+        if (sub) {
+            var txt = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+            sub.textContent = txt.charAt(0).toUpperCase() + txt.slice(1);
         }
-        initDatePicker();
     });
 </script>
 </body>

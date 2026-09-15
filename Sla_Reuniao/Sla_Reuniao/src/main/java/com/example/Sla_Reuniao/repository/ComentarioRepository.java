@@ -9,6 +9,5 @@ import java.util.List;
 @Repository
 public interface ComentarioRepository extends JpaRepository<Comentario, Long> {
 
-    // Busca todo o histórico de conversa de uma única tarefa, do mais antigo pro mais novo
     List<Comentario> findByTarefaIdOrderByDataCriacaoAsc(Long tarefaId);
 }

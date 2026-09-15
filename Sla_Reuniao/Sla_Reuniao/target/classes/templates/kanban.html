@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SeOrganize — Kanban</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>SeOrganize · Kanban</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css">
 
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -50,7 +53,7 @@
             flex-shrink: 0;
         }
 
-        .topbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .topbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; cursor: pointer; }
 
         .topbar-logo {
             width: 32px; height: 32px;
@@ -68,22 +71,23 @@
         .topbar-sep { width: 1px; height: 18px; background: rgba(255,255,255,.15); margin: 0 12px; }
 
         .topbar-section {
-            font-size: 0.78rem; font-weight: 500;
-            color: rgba(255,255,255,.45);
-            letter-spacing: 1px; text-transform: uppercase;
+            font-size: 0.8rem; font-weight: 500;
+            color: rgba(255,255,255,.5);
         }
 
         .topbar-right { display: flex; align-items: center; gap: 8px; }
+        .user-chip { display:flex; align-items:center; gap:8px; padding-right:10px; margin-right:2px; border-right:1px solid rgba(255,255,255,.12); }
+        .user-avatar { width:28px; height:28px; border-radius:50%; background:#1f2937; color:#e5e7eb; font-size:.68rem; font-weight:600; display:inline-flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.12); letter-spacing:0; }
+        .topbar-user { font-size:.8rem; color:rgba(255,255,255,.7); max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
         .btn-top {
             display: flex; align-items: center; gap: 6px;
             padding: 7px 14px; border-radius: 8px;
             font-family: 'DM Sans', sans-serif;
-            font-size: 0.82rem; font-weight: 600;
+            font-size: 0.82rem; font-weight: 500;
             cursor: pointer; text-decoration: none; border: none;
-            transition: background .15s, transform .1s;
+            transition: background .15s;
         }
-        .btn-top:active { transform: scale(.97); }
         .btn-top svg { width: 14px; height: 14px; }
 
         .btn-ghost  { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.15); }
@@ -91,6 +95,7 @@
 
         .btn-sair   { background: rgba(239,68,68,.15); color: #fca5a5; border: 1px solid rgba(239,68,68,.25); }
         .btn-sair:hover { background: rgba(239,68,68,.25); }
+        .topbar-right form { margin: 0; display: flex; }
 
         .btn-primary-top {
             background: var(--accent); color: #0f1117;
@@ -98,11 +103,23 @@
             font-family: 'DM Sans', sans-serif;
             font-size: 0.85rem; font-weight: 600;
             cursor: pointer; display: flex; align-items: center; gap: 6px;
-            transition: background .15s, transform .1s;
+            transition: background .15s;
         }
         .btn-primary-top:hover { background: var(--accent-dim); color: #fff; }
-        .btn-primary-top:active { transform: scale(.97); }
         .btn-primary-top svg { width: 15px; height: 15px; }
+
+        .board-header-actions { display: flex; align-items: center; gap: 8px; }
+        .btn-excel-top {
+            background: #166534; color: #fff;
+            border: none; padding: 8px 16px; border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 6px;
+            text-decoration: none;
+            transition: background .15s;
+        }
+        .btn-excel-top:hover { background: #14532d; }
+        .btn-excel-top svg { width: 15px; height: 15px; }
 
         .board-header {
             display: flex; align-items: center; justify-content: space-between;
@@ -119,10 +136,11 @@
         .board {
             display: flex;
             gap: 1.25rem;
-            padding: 0 2rem 2rem;
+            padding: 0 2rem 1.25rem;
             overflow-x: auto;
             flex: 1;
-            align-items: flex-start;
+            min-height: 0;
+            align-items: stretch;
         }
 
         .board::-webkit-scrollbar { height: 6px; }
@@ -138,7 +156,8 @@
             background: var(--surface);
             display: flex;
             flex-direction: column;
-            max-height: calc(100vh - 160px);
+            height: calc(100vh - 200px);
+            max-height: calc(100vh - 200px);
         }
 
         .col-header {
@@ -146,12 +165,17 @@
             padding: 1rem 1rem 0.75rem;
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: var(--surface);
+            border-radius: 14px 14px 0 0;
         }
 
         .col-label {
             display: flex; align-items: center; gap: 8px;
-            font-size: 0.82rem; font-weight: 600;
-            text-transform: uppercase; letter-spacing: 0.6px;
+            font-size: 0.85rem; font-weight: 600;
+            color: var(--ink);
         }
 
         .col-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
@@ -159,18 +183,12 @@
         .dot-orange { background: var(--orange); }
         .dot-green  { background: var(--accent); }
 
-        .col-todo   .col-label { color: #b91c1c; }
-        .col-doing  .col-label { color: #c2410c; }
-        .col-done   .col-label { color: var(--accent-dim); }
-
         .col-count {
-            font-size: 0.75rem; font-weight: 700;
-            padding: 2px 9px; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 500;
+            padding: 2px 8px; border-radius: 6px;
+            font-variant-numeric: tabular-nums;
+            background: var(--bg); color: var(--ink-muted);
         }
-
-        .col-todo  .col-count { background: #fee2e2; color: #b91c1c; }
-        .col-doing .col-count { background: #ffedd5; color: #c2410c; }
-        .col-done  .col-count { background: #dcfce7; color: var(--accent-dim); }
 
         .col-body {
             padding: 0.75rem;
@@ -189,20 +207,14 @@
             border: 1px solid var(--border);
             border-radius: 10px;
             padding: 12px 14px;
-            transition: box-shadow .15s, transform .15s;
-            animation: fadeUp .2s ease both;
+            transition: border-color .15s, box-shadow .15s;
         }
 
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(6px); }
-            to   { opacity: 1; transform: none; }
-        }
+        .task-card:hover { border-color: #d1d5db; box-shadow: 0 1px 3px rgba(15,17,23,.06); }
 
-        .task-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.08); transform: translateY(-1px); }
-
-        .col-todo  .task-card { border-left: 3px solid var(--red); }
-        .col-doing .task-card { border-left: 3px solid var(--orange); }
-        .col-done  .task-card { border-left: 3px solid var(--accent); opacity: .85; }
+        .col-todo  .task-card { border-left: 2px solid var(--red); }
+        .col-doing .task-card { border-left: 2px solid var(--orange); }
+        .col-done  .task-card { border-left: 2px solid var(--accent); }
 
         .task-title {
             font-size: 0.92rem; font-weight: 600; color: var(--ink);
@@ -229,8 +241,6 @@
             display: flex; align-items: center; gap: 4px;
             flex: 1; min-width: 0;
         }
-
-        .task-people svg { width: 12px; height: 12px; flex-shrink: 0; }
 
         .task-people span {
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -268,7 +278,7 @@
         .btn-chat:hover { background: var(--bg); color: var(--ink); }
 
         .chat-count {
-            font-size: 0.7rem; font-weight: 700;
+            font-size: 0.7rem; font-weight: 600;
             background: var(--blue); color: #fff;
             padding: 1px 6px; border-radius: 10px;
         }
@@ -276,9 +286,8 @@
         .btn-move {
             width: 28px; height: 28px; border-radius: 7px; border: none;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: background .12s, transform .1s;
+            cursor: pointer; transition: background .12s;
         }
-        .btn-move:active { transform: scale(.93); }
         .btn-move svg { width: 13px; height: 13px; }
 
         .btn-forward { background: var(--accent); color: #0f1117; }
@@ -295,7 +304,7 @@
             padding: 5px 12px; border-radius: 7px; border: none;
             background: var(--accent); color: #0f1117;
             font-family: 'DM Sans', sans-serif;
-            font-size: 0.78rem; font-weight: 700;
+            font-size: 0.78rem; font-weight: 600;
             cursor: pointer; transition: background .12s;
         }
         .btn-complete:hover { background: var(--accent-dim); color: #fff; }
@@ -312,25 +321,18 @@
             background: rgba(15,17,23,.5);
             z-index: 300;
             align-items: center; justify-content: center;
-            backdrop-filter: blur(2px);
         }
 
         .modal-overlay.open { display: flex; }
 
         .modal-box {
             background: var(--surface);
-            border-radius: 16px;
+            border-radius: 12px;
             border: 1px solid var(--border);
             width: 100%; max-width: 480px;
             max-height: 90vh;
             display: flex; flex-direction: column;
             overflow: hidden;
-            animation: modalIn .2s cubic-bezier(.22,.68,0,1.2) both;
-        }
-
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(.95) translateY(10px); }
-            to   { opacity: 1; transform: none; }
         }
 
         .modal-header {
@@ -361,9 +363,8 @@
         .mfield { margin-bottom: 1.1rem; }
 
         .mfield label {
-            display: block; font-size: 0.75rem; font-weight: 600;
-            color: var(--ink-muted); text-transform: uppercase;
-            letter-spacing: 0.4px; margin-bottom: 0.4rem;
+            display: block; font-size: 0.8rem; font-weight: 500;
+            color: #4b5563; margin-bottom: 0.4rem;
         }
 
         .mfield input,
@@ -413,10 +414,9 @@
             cursor: pointer; display: flex; align-items: center;
             justify-content: center; gap: 8px;
             margin-top: 0.25rem;
-            transition: background .15s, transform .1s;
+            transition: background .15s;
         }
         .btn-submit-modal:hover { background: var(--blue-dim); }
-        .btn-submit-modal:active { transform: scale(.98); }
         .btn-submit-modal svg { width: 16px; height: 16px; }
 
         .chat-meta {
@@ -493,12 +493,99 @@
         }
         .btn-email:hover { background: var(--border); color: var(--ink); }
         .btn-email svg { width: 14px; height: 14px; }
+
+        .board-toolbar {
+            display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+            padding: 0 2rem 1rem;
+        }
+        .filter-input, .filter-select {
+            padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 9px;
+            font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: var(--ink);
+            background: var(--surface); outline: none;
+        }
+        .filter-select {
+            appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.4'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 32px;
+        }
+        .filter-input { min-width: 220px; flex: 1; max-width: 360px; }
+        .filter-input:focus, .filter-select:focus {
+            border-color: var(--blue); box-shadow: 0 0 0 4px rgba(59,130,246,.12);
+        }
+        .task-meta {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 8px; margin-bottom: 8px; font-size: 0.72rem; color: var(--ink-muted);
+        }
+        .avatars { display: flex; gap: 4px; flex-wrap: wrap; }
+        .avatar {
+            width: 22px; height: 22px; border-radius: 50%;
+            background: #eef2ff; color: #3730a3;
+            font-size: 0.68rem; font-weight: 600;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .no-assignee { font-size: 0.72rem; color: var(--ink-muted); }
+        .task-card { cursor: grab; }
+        .task-card.sortable-ghost { opacity: .4; }
+        .hidden-by-filter { display: none !important; }
+        .toast {
+            position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 400;
+            padding: 12px 16px; border-radius: 10px; font-size: 0.85rem; font-weight: 500;
+            box-shadow: 0 4px 16px rgba(15,17,23,.1);
+        }
+        .toast-ok { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+        .toast-err { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+        .btn-icon-danger:hover { background: #fee2e2; color: var(--red); border-color: #fecaca; }
+        .btn-danger-modal {
+            width: 100%; padding: 10px; margin-top: 8px; border-radius: 9px;
+            border: 1px solid #fecaca; background: #fef2f2; color: #b91c1c;
+            font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+        }
+        .modal-box.wide { max-width: 520px; }
+
+        .btn-density {
+            padding: 8px 12px; border-radius: 9px;
+            border: 1.5px solid var(--border); background: var(--surface);
+            font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500;
+            color: var(--ink-muted); cursor: pointer;
+        }
+        .btn-density[aria-pressed="true"] {
+            background: #eef2ff; color: #3730a3; border-color: #c7d2fe;
+        }
+
+        body.kanban-compact .board-header { padding: 0.85rem 2rem 0.45rem; }
+        body.kanban-compact .board-header h1 { font-size: 1.35rem; }
+        body.kanban-compact .board-toolbar { padding-bottom: 0.55rem; }
+        body.kanban-compact .col {
+            height: calc(100vh - 168px);
+            max-height: calc(100vh - 168px);
+        }
+
+        .board.compact .col-header { padding: 0.7rem 0.85rem 0.55rem; }
+        .board.compact .col-body { padding: 0.45rem; gap: 5px; }
+        .board.compact .task-card { padding: 8px 10px; border-radius: 8px; }
+        .board.compact .task-meta { margin-bottom: 3px; }
+        .board.compact .task-title { font-size: 0.82rem; margin-bottom: 2px; line-height: 1.3; }
+        .board.compact .task-desc {
+            -webkit-line-clamp: 1; margin-bottom: 6px; font-size: 0.75rem; line-height: 1.35;
+        }
+        .board.compact .task-footer { padding-top: 6px; }
+        .board.compact .avatar { width: 18px; height: 18px; font-size: 0.62rem; }
+        .board.compact .btn-icon,
+        .board.compact .btn-move { width: 24px; height: 24px; border-radius: 6px; }
+        .board.compact .btn-icon svg,
+        .board.compact .btn-move svg { width: 12px; height: 12px; }
+        .board.compact .btn-chat { padding: 3px 7px; font-size: 0.7rem; }
+        .board.compact .btn-complete { padding: 3px 8px; font-size: 0.72rem; gap: 3px; }
+        .board.compact .btn-complete-label { display: none; }
+        .board.compact .col-empty { padding: 1.25rem 0.75rem; }
     </style>
 </head>
 <body>
 
 <nav class="topbar">
-    <div class="topbar-brand">
+    <a class="topbar-brand" href="/" aria-label="Voltar ao início">
         <div class="topbar-logo">
             <svg viewBox="0 0 24 24" fill="none" stroke="#0f1117" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
@@ -506,10 +593,14 @@
         </div>
         <span class="topbar-name">SeOrganize</span>
         <div class="topbar-sep"></div>
-        <span class="topbar-section">Quadro Kanban</span>
-    </div>
+        <span class="topbar-section">Kanban</span>
+    </a>
 
     <div class="topbar-right">
+        <div class="user-chip">
+            <span class="user-avatar" th:text="${usuarioLogado.iniciais}" th:title="${usuarioLogado.nome}">SO</span>
+            <span class="topbar-user" th:text="${usuarioLogado.nome}">Usuário</span>
+        </div>
         <a th:if="${usuarioLogado.perfil == 'COLABORADOR'}" href="/usuario" class="btn-top btn-ghost">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             Portal
@@ -522,49 +613,93 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             Painel TI
         </a>
-        <a href="/sair" class="btn-top btn-sair">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
-            Sair
-        </a>
+        <form th:action="@{/sair}" method="POST">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="btn-top btn-sair">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Sair
+            </button>
+        </form>
     </div>
 </nav>
 
 <div class="board-header">
     <div>
-        <h1>Quadro de Solicitações</h1>
-        <p>Gerencie tarefas e acompanhe o progresso da equipe.</p>
+        <h1>Quadro de solicitações</h1>
+        <p>Arraste os cards entre as colunas.</p>
     </div>
-    <button class="btn-primary-top" onclick="document.getElementById('modalNovaTarefa').classList.add('open')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Nova Tarefa
+    <div class="board-header-actions">
+        <a th:if="${usuarioLogado.perfil == 'ADMIN'}"
+           th:href="@{/admin/exportar-relatorio}"
+           download="Relatorio_SeOrganize.xlsx"
+           class="btn-excel-top js-excel-download">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8"/><path d="M8 17h5"/></svg>
+            Relatório
+        </a>
+        <button type="button" class="btn-primary-top" onclick="document.getElementById('modalNovaTarefa').classList.add('open')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nova tarefa
+        </button>
+    </div>
+</div>
+
+<div class="board-toolbar">
+    <input type="search" id="filtroTexto" class="filter-input" placeholder="Buscar no quadro…" oninput="filtrarKanban()" autocomplete="off">
+    <select id="filtroResponsavel" class="filter-select" onchange="filtrarKanban()">
+        <option value="">Todos os responsáveis</option>
+        <option th:each="user : ${todosUsuarios}" th:value="${user.nome}" th:text="${user.nome}"></option>
+    </select>
+    <button type="button" id="toggleCompacto" class="btn-density" aria-pressed="false" title="Ajustar densidade dos cards">
+        Modo compacto
     </button>
 </div>
 
-<div class="board">
+<div th:if="${sucessoKanban}" class="toast toast-ok" th:text="${sucessoKanban}"></div>
+<div th:if="${erroKanban}" class="toast toast-err" th:text="${erroKanban}"></div>
+
+<div class="board" id="kanbanBoard"
+     th:attr="data-total=${#lists.size(tarefasAFazer) + #lists.size(tarefasFazendo) + #lists.size(tarefasConcluidas)}">
 
     <div class="col col-todo">
         <div class="col-header">
             <div class="col-label">
                 <span class="col-dot dot-red"></span>
-                A Fazer
+                A fazer
             </div>
             <span class="col-count" th:text="${#lists.size(tarefasAFazer)}">0</span>
         </div>
-        <div class="col-body">
-            <div th:each="tarefa : ${tarefasAFazer}" class="task-card">
+        <div class="col-body" data-status="A_FAZER">
+            <div th:each="tarefa : ${tarefasAFazer}" class="task-card"
+                 th:attr="data-id=${tarefa.id},
+                          data-titulo=${tarefa.titulo},
+                          data-descricao=${tarefa.descricao},
+                          data-solicitante=${tarefa.solicitante},
+                          data-ids=${#strings.listJoin(tarefa.responsaveis.![id], ',')},
+                          data-people=${#strings.listJoin(tarefa.responsaveis.![nome], ', ')}">
+                <div class="task-meta">
+                    <span th:text="${tarefa.dataCriacao != null} ? ${#temporals.format(tarefa.dataCriacao, 'dd/MM HH:mm')} : '·'"></span>
+                    <span th:text="'#' + ${tarefa.id}"></span>
+                </div>
                 <div class="task-title" th:text="${tarefa.titulo}"></div>
-                <div class="task-desc" th:text="${tarefa.descricao}"></div>
+                <div class="task-desc" th:if="${tarefa.descricao != null and !#strings.isEmpty(tarefa.descricao)}" th:text="${tarefa.descricao}"></div>
                 <div class="task-footer">
                     <div class="task-people">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        <span th:each="resp, i : ${tarefa.responsaveis}" th:text="${resp.nome} + ${!i.last ? ', ' : ''}"></span>
+                        <div class="avatars" th:if="${!#lists.isEmpty(tarefa.responsaveis)}">
+                            <span class="avatar" th:each="resp : ${tarefa.responsaveis}"
+                                  th:text="${resp.nome != null and !#strings.isEmpty(resp.nome)} ? ${#strings.substring(resp.nome,0,1)} : '?'"
+                                  th:title="${resp.nome}"></span>
+                        </div>
+                        <span class="no-assignee" th:if="${#lists.isEmpty(tarefa.responsaveis)}">Sem responsável</span>
                     </div>
                     <div class="task-actions">
-                        <button class="btn-chat" th:onclick="'openChat(' + ${tarefa.id} + ')'">
+                        <button type="button" class="btn-icon" title="Editar" th:onclick="'openEdit(' + ${tarefa.id} + ')'">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                        </button>
+                        <button type="button" class="btn-chat" title="Comentários" th:onclick="'openChat(' + ${tarefa.id} + ')'">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                            <span class="chat-count" th:text="${#lists.size(tarefa.comentarios)}">0</span>
+                            <span class="chat-count" th:if="${tarefa.comentarios != null and !#lists.isEmpty(tarefa.comentarios)}" th:text="${#lists.size(tarefa.comentarios)}">0</span>
                         </button>
                         <form th:action="@{/mover-tarefa/{id}(id=${tarefa.id})}" method="POST" style="margin:0">
                             <input type="hidden" name="novoStatus" value="FAZENDO">
@@ -575,7 +710,7 @@
                     </div>
                 </div>
             </div>
-            <div th:if="${#lists.isEmpty(tarefasAFazer)}" class="col-empty">Nenhuma tarefa pendente.</div>
+            <div class="col-empty" th:classappend="${!#lists.isEmpty(tarefasAFazer)} ? ' hidden-by-filter'">Nenhuma tarefa pendente.</div>
         </div>
     </div>
 
@@ -587,19 +722,36 @@
             </div>
             <span class="col-count" th:text="${#lists.size(tarefasFazendo)}">0</span>
         </div>
-        <div class="col-body">
-            <div th:each="tarefa : ${tarefasFazendo}" class="task-card">
+        <div class="col-body" data-status="FAZENDO">
+            <div th:each="tarefa : ${tarefasFazendo}" class="task-card"
+                 th:attr="data-id=${tarefa.id},
+                          data-titulo=${tarefa.titulo},
+                          data-descricao=${tarefa.descricao},
+                          data-solicitante=${tarefa.solicitante},
+                          data-ids=${#strings.listJoin(tarefa.responsaveis.![id], ',')},
+                          data-people=${#strings.listJoin(tarefa.responsaveis.![nome], ', ')}">
+                <div class="task-meta">
+                    <span th:text="${tarefa.dataCriacao != null} ? ${#temporals.format(tarefa.dataCriacao, 'dd/MM HH:mm')} : '·'"></span>
+                    <span th:text="'#' + ${tarefa.id}"></span>
+                </div>
                 <div class="task-title" th:text="${tarefa.titulo}"></div>
-                <div class="task-desc" th:text="${tarefa.descricao}"></div>
+                <div class="task-desc" th:if="${tarefa.descricao != null and !#strings.isEmpty(tarefa.descricao)}" th:text="${tarefa.descricao}"></div>
                 <div class="task-footer">
                     <div class="task-people">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        <span th:each="resp, i : ${tarefa.responsaveis}" th:text="${resp.nome} + ${!i.last ? ', ' : ''}"></span>
+                        <div class="avatars" th:if="${!#lists.isEmpty(tarefa.responsaveis)}">
+                            <span class="avatar" th:each="resp : ${tarefa.responsaveis}"
+                                  th:text="${resp.nome != null and !#strings.isEmpty(resp.nome)} ? ${#strings.substring(resp.nome,0,1)} : '?'"
+                                  th:title="${resp.nome}"></span>
+                        </div>
+                        <span class="no-assignee" th:if="${#lists.isEmpty(tarefa.responsaveis)}">Sem responsável</span>
                     </div>
                     <div class="task-actions">
-                        <button class="btn-chat" th:onclick="'openChat(' + ${tarefa.id} + ')'">
+                        <button type="button" class="btn-icon" title="Editar" th:onclick="'openEdit(' + ${tarefa.id} + ')'">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                        </button>
+                        <button type="button" class="btn-chat" title="Comentários" th:onclick="'openChat(' + ${tarefa.id} + ')'">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                            <span class="chat-count" th:text="${#lists.size(tarefa.comentarios)}">0</span>
+                            <span class="chat-count" th:if="${tarefa.comentarios != null and !#lists.isEmpty(tarefa.comentarios)}" th:text="${#lists.size(tarefa.comentarios)}">0</span>
                         </button>
                         <form th:action="@{/mover-tarefa/{id}(id=${tarefa.id})}" method="POST" style="margin:0">
                             <input type="hidden" name="novoStatus" value="A_FAZER">
@@ -609,15 +761,15 @@
                         </form>
                         <form th:action="@{/mover-tarefa/{id}(id=${tarefa.id})}" method="POST" style="margin:0">
                             <input type="hidden" name="novoStatus" value="CONCLUIDO">
-                            <button type="submit" class="btn-complete">
+                            <button type="submit" class="btn-complete" title="Concluir">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                Concluir
+                                <span class="btn-complete-label">Concluir</span>
                             </button>
                         </form>
                     </div>
                 </div>
             </div>
-            <div th:if="${#lists.isEmpty(tarefasFazendo)}" class="col-empty">Nenhuma tarefa em andamento.</div>
+            <div class="col-empty" th:classappend="${!#lists.isEmpty(tarefasFazendo)} ? ' hidden-by-filter'">Nenhuma tarefa em andamento.</div>
         </div>
     </div>
 
@@ -629,19 +781,36 @@
             </div>
             <span class="col-count" th:text="${#lists.size(tarefasConcluidas)}">0</span>
         </div>
-        <div class="col-body">
-            <div th:each="tarefa : ${tarefasConcluidas}" class="task-card">
+        <div class="col-body" data-status="CONCLUIDO">
+            <div th:each="tarefa : ${tarefasConcluidas}" class="task-card"
+                 th:attr="data-id=${tarefa.id},
+                          data-titulo=${tarefa.titulo},
+                          data-descricao=${tarefa.descricao},
+                          data-solicitante=${tarefa.solicitante},
+                          data-ids=${#strings.listJoin(tarefa.responsaveis.![id], ',')},
+                          data-people=${#strings.listJoin(tarefa.responsaveis.![nome], ', ')}">
+                <div class="task-meta">
+                    <span th:text="${tarefa.dataCriacao != null} ? ${#temporals.format(tarefa.dataCriacao, 'dd/MM HH:mm')} : '·'"></span>
+                    <span th:text="'#' + ${tarefa.id}"></span>
+                </div>
                 <div class="task-title" th:text="${tarefa.titulo}"></div>
-                <div class="task-desc" th:text="${tarefa.descricao}"></div>
+                <div class="task-desc" th:if="${tarefa.descricao != null and !#strings.isEmpty(tarefa.descricao)}" th:text="${tarefa.descricao}"></div>
                 <div class="task-footer">
                     <div class="task-people">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                        <span th:each="resp, i : ${tarefa.responsaveis}" th:text="${resp.nome} + ${!i.last ? ', ' : ''}"></span>
+                        <div class="avatars" th:if="${!#lists.isEmpty(tarefa.responsaveis)}">
+                            <span class="avatar" th:each="resp : ${tarefa.responsaveis}"
+                                  th:text="${resp.nome != null and !#strings.isEmpty(resp.nome)} ? ${#strings.substring(resp.nome,0,1)} : '?'"
+                                  th:title="${resp.nome}"></span>
+                        </div>
+                        <span class="no-assignee" th:if="${#lists.isEmpty(tarefa.responsaveis)}">Sem responsável</span>
                     </div>
                     <div class="task-actions">
-                        <button class="btn-chat" th:onclick="'openChat(' + ${tarefa.id} + ')'">
+                        <button type="button" class="btn-icon" title="Editar" th:onclick="'openEdit(' + ${tarefa.id} + ')'">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                        </button>
+                        <button type="button" class="btn-chat" title="Comentários" th:onclick="'openChat(' + ${tarefa.id} + ')'">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                            <span class="chat-count" th:text="${#lists.size(tarefa.comentarios)}">0</span>
+                            <span class="chat-count" th:if="${tarefa.comentarios != null and !#lists.isEmpty(tarefa.comentarios)}" th:text="${#lists.size(tarefa.comentarios)}">0</span>
                         </button>
                         <form th:action="@{/mover-tarefa/{id}(id=${tarefa.id})}" method="POST" style="margin:0">
                             <input type="hidden" name="novoStatus" value="FAZENDO">
@@ -652,7 +821,7 @@
                     </div>
                 </div>
             </div>
-            <div th:if="${#lists.isEmpty(tarefasConcluidas)}" class="col-empty">Nenhuma tarefa concluída ainda.</div>
+            <div class="col-empty" th:classappend="${!#lists.isEmpty(tarefasConcluidas)} ? ' hidden-by-filter'">Nenhuma tarefa concluída ainda.</div>
         </div>
     </div>
 
@@ -663,16 +832,14 @@
         <div class="modal-header">
             <div class="modal-title">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Abrir Nova Solicitação
+                Nova solicitação
             </div>
-            <button class="btn-close-modal" onclick="document.getElementById('modalNovaTarefa').classList.remove('open')">
+            <button type="button" class="btn-close-modal" aria-label="Fechar" onclick="document.getElementById('modalNovaTarefa').classList.remove('open')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
         </div>
         <div class="modal-body">
-            <form action="/criar-tarefa" method="POST">
-                <input type="hidden" name="solicitante" th:value="${usuarioLogado.nome}">
-
+            <form th:action="@{/criar-tarefa}" method="POST">
                 <div class="mfield">
                     <label>Título curto</label>
                     <input type="text" name="titulo" placeholder="Ex: Internet caindo na sala 2" required>
@@ -695,71 +862,236 @@
 
                 <button type="submit" class="btn-submit-modal">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                    Criar e Enviar ao Quadro
+                    Criar
                 </button>
             </form>
         </div>
     </div>
 </div>
 
-<div th:each="t : ${todasTarefas}">
-    <div class="modal-overlay" th:id="'modalChat-' + ${t.id}" onclick="if(event.target===this) this.classList.remove('open')">
-        <div class="modal-box">
-            <div class="modal-header">
-                <div class="modal-title">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    Chamado <span th:text="'#' + ${t.id}"></span>
-                </div>
-                <button class="btn-close-modal" th:onclick="'document.getElementById(\'modalChat-' + ${t.id} + '\').classList.remove(\'open\')'">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
+<div class="modal-overlay" id="modalEditar" onclick="if(event.target===this) this.classList.remove('open')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                Editar tarefa
             </div>
-            <div class="modal-body">
-
-                <form th:action="@{/enviar-historico-email/{id}(id=${t.id})}" method="POST" style="margin:0">
-                    <button type="submit" class="btn-email">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                        Enviar histórico por e-mail
-                    </button>
-                </form>
-
-                <div class="chat-meta">
-                    <strong th:text="${t.titulo}">Título</strong>
-                    <p th:text="${t.descricao}">Descrição...</p>
-                    <span th:text="'Criado por ' + ${t.solicitante}"></span>
+            <button type="button" class="btn-close-modal" aria-label="Fechar" onclick="document.getElementById('modalEditar').classList.remove('open')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="formEditar" th:action="@{/editar-tarefa/0}" method="POST">
+                <div class="mfield">
+                    <label>Título</label>
+                    <input type="text" name="titulo" id="editTitulo" required>
                 </div>
-
-                <div class="chat-messages">
-                    <div th:if="${#lists.isEmpty(t.comentarios)}" class="chat-empty">
-                        Nenhum comentário ainda. Inicie a conversa!
-                    </div>
-                    <div th:each="c : ${t.comentarios}" class="msg-bubble">
-                        <div class="msg-header">
-                            <span class="msg-author" th:text="${c.autor}"></span>
-                            <span class="msg-time" th:text="${#temporals.format(c.dataCriacao, 'dd/MM HH:mm')}"></span>
-                        </div>
-                        <div class="msg-text" th:text="${c.texto}"></div>
+                <div class="mfield">
+                    <label>Responsáveis</label>
+                    <div class="checkbox-list" id="editResponsaveis">
+                        <label class="checkbox-item" th:each="user : ${todosUsuarios}">
+                            <input type="checkbox" name="responsaveisIds" th:value="${user.id}">
+                            <span th:text="${user.nome} + ' · ' + ${user.perfil}"></span>
+                        </label>
                     </div>
                 </div>
-
-                <form th:action="@{/adicionar-comentario/{id}(id=${t.id})}" method="POST">
-                    <div class="chat-input-row">
-                        <input type="text" name="texto" placeholder="Escreva uma atualização..." required autocomplete="off">
-                        <button type="submit" class="btn-send">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                        </button>
-                    </div>
-                </form>
-
-            </div>
+                <div class="mfield">
+                    <label>Descrição</label>
+                    <textarea name="descricao" id="editDescricao" required></textarea>
+                </div>
+                <button type="submit" class="btn-submit-modal">Salvar alterações</button>
+            </form>
+            <form id="formExcluir" th:action="@{/excluir-tarefa/0}" method="POST"
+                  onsubmit="return confirm('Excluir esta tarefa definitivamente?')">
+                <button type="submit" class="btn-danger-modal" id="btnExcluirTarefa" style="display:none">Excluir tarefa</button>
+            </form>
         </div>
     </div>
 </div>
 
-<script>
-    function openChat(id) {
-        document.getElementById('modalChat-' + id).classList.add('open');
+<div class="modal-overlay" id="modalChat" onclick="if(event.target===this) this.classList.remove('open')">
+    <div class="modal-box wide">
+        <div class="modal-header">
+            <div class="modal-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Chamado <span id="chatIdLabel">#</span>
+            </div>
+            <button type="button" class="btn-close-modal" aria-label="Fechar" onclick="document.getElementById('modalChat').classList.remove('open')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="formEmail" th:action="@{/enviar-historico-email/0}" method="POST" style="margin:0">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="submit" class="btn-email">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                    Enviar histórico por e-mail
+                </button>
+            </form>
+            <div class="chat-meta">
+                <strong id="chatTitulo">Título</strong>
+                <p id="chatDescricao">Descrição...</p>
+                <span id="chatSolicitante"></span>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <form id="formComentario" th:action="@{/adicionar-comentario/0}" method="POST">
+                <div class="chat-input-row">
+                    <input type="text" name="texto" placeholder="Escreva uma atualização..." required autocomplete="off">
+                    <button type="submit" class="btn-send" aria-label="Enviar comentário">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div hidden>
+    <div th:each="t : ${todasTarefas}" class="chat-data" th:id="'chat-data-' + ${t.id}"
+         th:attr="data-titulo=${t.titulo}, data-descricao=${t.descricao}, data-solicitante=${t.solicitante},
+                  data-can-delete=${usuarioLogado.perfil == 'ADMIN' or usuarioLogado.id == t.solicitanteId or usuarioLogado.nome == t.solicitante}">
+        <div th:if="${t.comentarios == null or #lists.isEmpty(t.comentarios)}" class="chat-empty">
+            Nenhum comentário ainda.
+        </div>
+        <div th:each="c : ${t.comentarios}" class="msg-bubble">
+            <div class="msg-header">
+                <span class="msg-author" th:text="${c.autor}"></span>
+                <span class="msg-time" th:text="${#temporals.format(c.dataCriacao, 'dd/MM HH:mm')}"></span>
+            </div>
+            <div class="msg-text" th:text="${c.texto}"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="/js/ui.js?v=excel2"></script>
+<script th:inline="javascript">
+    const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+    const chatAberto = /*[[${chatAberto}]]*/ null;
+    const usuarioId = /*[[${usuarioLogado.id}]]*/ null;
+    const usuarioPerfil = /*[[${usuarioLogado.perfil}]]*/ 'COLABORADOR';
+    const usuarioNome = /*[[${usuarioLogado.nome}]]*/ '';
+
+    function csrfHeaders() {
+        const h = { 'X-Requested-With': 'XMLHttpRequest' };
+        h[csrfHeader] = csrfToken;
+        return h;
     }
+
+    function filtrarKanban() {
+        const texto = (document.getElementById('filtroTexto').value || '').toLowerCase();
+        const resp = (document.getElementById('filtroResponsavel').value || '').toLowerCase();
+        document.querySelectorAll('.col-body').forEach(function (col) {
+            let visiveis = 0;
+            col.querySelectorAll('.task-card').forEach(function (card) {
+                const blob = ((card.dataset.titulo || '') + ' ' + (card.dataset.descricao || '') + ' ' +
+                    (card.dataset.solicitante || '') + ' ' + (card.dataset.people || '')).toLowerCase();
+                const matchTexto = !texto || blob.indexOf(texto) !== -1;
+                const matchResp = !resp || (card.dataset.people || '').toLowerCase().indexOf(resp) !== -1;
+                const ok = matchTexto && matchResp;
+                card.classList.toggle('hidden-by-filter', !ok);
+                if (ok) visiveis++;
+            });
+            const empty = col.querySelector('.col-empty');
+            if (empty) empty.classList.toggle('hidden-by-filter', visiveis > 0);
+        });
+    }
+
+    function openChat(id) {
+        const src = document.getElementById('chat-data-' + id);
+        if (!src) return;
+        document.getElementById('chatIdLabel').textContent = '#' + id;
+        document.getElementById('chatTitulo').textContent = src.dataset.titulo || '';
+        document.getElementById('chatDescricao').textContent = src.dataset.descricao || '';
+        document.getElementById('chatSolicitante').textContent = src.dataset.solicitante ? ('Criado por ' + src.dataset.solicitante) : '';
+        document.getElementById('chatMessages').innerHTML = src.innerHTML;
+        document.getElementById('formComentario').action = '/adicionar-comentario/' + id;
+        document.getElementById('formEmail').action = '/enviar-historico-email/' + id;
+        document.getElementById('modalChat').classList.add('open');
+    }
+
+    function openEdit(id) {
+        const card = document.querySelector('.task-card[data-id="' + id + '"]');
+        if (!card) return;
+        document.getElementById('editTitulo').value = card.dataset.titulo || '';
+        document.getElementById('editDescricao').value = card.dataset.descricao || '';
+        const ids = (card.dataset.ids || '').replace(/[\[\]]/g, '').split(',').map(function (s) { return s.trim(); });
+        document.querySelectorAll('#editResponsaveis input[type="checkbox"]').forEach(function (cb) {
+            cb.checked = ids.indexOf(cb.value) !== -1;
+        });
+        document.getElementById('formEditar').action = '/editar-tarefa/' + id;
+        document.getElementById('formExcluir').action = '/excluir-tarefa/' + id;
+        const src = document.getElementById('chat-data-' + id);
+        const canDelete = usuarioPerfil === 'ADMIN' || (src && src.dataset.canDelete === 'true');
+        document.getElementById('btnExcluirTarefa').style.display = canDelete ? 'block' : 'none';
+        document.getElementById('modalEditar').classList.add('open');
+        const titulo = document.getElementById('editTitulo');
+        titulo.focus();
+        titulo.select();
+    }
+
+    document.querySelectorAll('.col-body').forEach(function (el) {
+        new Sortable(el, {
+            group: 'kanban',
+            animation: 150,
+            draggable: '.task-card',
+            filter: '.col-empty, button, form, input, a',
+            preventOnFilter: false,
+            onEnd: function (evt) {
+                const card = evt.item;
+                const status = evt.to.dataset.status;
+                const id = card.dataset.id;
+                if (!id || !status || evt.from === evt.to) return;
+                fetch('/mover-tarefa/' + id, {
+                    method: 'POST',
+                    headers: Object.assign({ 'Content-Type': 'application/x-www-form-urlencoded' }, csrfHeaders()),
+                    body: 'novoStatus=' + encodeURIComponent(status) + '&_csrf=' + encodeURIComponent(csrfToken)
+                }).then(function (res) {
+                    if (!res.ok) {
+                        evt.from.appendChild(card);
+                        alert('Não foi possível mover a tarefa.');
+                    }
+                }).catch(function () {
+                    evt.from.appendChild(card);
+                    alert('Não foi possível mover a tarefa.');
+                });
+            }
+        });
+    });
+
+    (function densidadeKanban() {
+        const board = document.getElementById('kanbanBoard');
+        const toggle = document.getElementById('toggleCompacto');
+        if (!board) return;
+        const stored = localStorage.getItem('kanban-compact');
+        const total = parseInt(board.dataset.total || '0', 10);
+        let compact = stored === '1' || (stored !== '0' && total >= 12);
+        function aplicar(on) {
+            board.classList.toggle('compact', on);
+            document.body.classList.toggle('kanban-compact', on);
+            if (!toggle) return;
+            toggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+            toggle.textContent = on ? 'Densidade normal' : 'Modo compacto';
+        }
+        aplicar(compact);
+        if (toggle) {
+            toggle.addEventListener('click', function () {
+                compact = !board.classList.contains('compact');
+                aplicar(compact);
+                localStorage.setItem('kanban-compact', compact ? '1' : '0');
+            });
+        }
+    })();
+
+    if (chatAberto) openChat(chatAberto);
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        document.querySelectorAll('.modal-overlay.open').forEach(function (m) { m.classList.remove('open'); });
+    });
+    setTimeout(function () {
+        document.querySelectorAll('.toast').forEach(function (t) { t.style.display = 'none'; });
+    }, 4000);
 </script>
 
 </body>

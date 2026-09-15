@@ -1,29 +1,25 @@
 package com.example.Sla_Reuniao.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tb_agendamentos")
-@Data
 public class Agendamento {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "O nome do solicitante é obrigatório")
     @Column(nullable = false)
     private String solicitante;
 
-    @NotNull(message = "A data e hora de início são obrigatórias")
+    @Column(name = "solicitante_id")
+    private Long solicitanteId;
+
     @Column(nullable = false)
     private LocalDateTime dataHoraInicio;
 
-    @NotNull(message = "A data e hora de término são obrigatórias")
     @Column(nullable = false)
     private LocalDateTime dataHoraFim;
 
@@ -33,4 +29,29 @@ public class Agendamento {
 
     @Column(nullable = false)
     private String status = "CONFIRMADO";
+
+    public Agendamento() {
+        this.status = "CONFIRMADO";
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getSolicitante() { return solicitante; }
+    public void setSolicitante(String solicitante) { this.solicitante = solicitante; }
+
+    public Long getSolicitanteId() { return solicitanteId; }
+    public void setSolicitanteId(Long solicitanteId) { this.solicitanteId = solicitanteId; }
+
+    public LocalDateTime getDataHoraInicio() { return dataHoraInicio; }
+    public void setDataHoraInicio(LocalDateTime dataHoraInicio) { this.dataHoraInicio = dataHoraInicio; }
+
+    public LocalDateTime getDataHoraFim() { return dataHoraFim; }
+    public void setDataHoraFim(LocalDateTime dataHoraFim) { this.dataHoraFim = dataHoraFim; }
+
+    public Sala getSala() { return sala; }
+    public void setSala(Sala sala) { this.sala = sala; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }

@@ -18,14 +18,15 @@ public class PedidoLigacao {
     @Column(nullable = false)
     private String nomeColaborador;
 
+    @Column(name = "solicitante_id")
+    private Long solicitanteId;
+
     @NotBlank(message = "Para quem a recepção deve ligar?")
     @Column(nullable = false)
     private String destinatario;
 
-
     @Column(nullable = true)
     private String telefone;
-
 
     @ManyToOne
     @JoinColumn(name = "contato_id", nullable = true)
@@ -40,6 +41,14 @@ public class PedidoLigacao {
     @Column(nullable = false)
     private String status = "PENDENTE";
 
+    @Column(length = 20)
+    private String resultado;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime dataSolicitacao = LocalDateTime.now();
+
+    @Transient
+    public boolean isConcluida() {
+        return "CONCLUIDO".equalsIgnoreCase(this.status);
+    }
 }

@@ -19,8 +19,9 @@ public class Comentario {
     private LocalDateTime dataCriacao;
 
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tarefa_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Tarefa tarefa;
 
     public Comentario() {
