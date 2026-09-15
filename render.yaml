@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: seorganize
+    runtime: docker
+    dockerfilePath: Sla_Reuniao/Sla_Reuniao/Dockerfile
+    dockerContext: Sla_Reuniao/Sla_Reuniao
+    plan: starter
+    healthCheckPath: /
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: seorganize-db
+          property: connectionString
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_NOME
+        value: Administrador
+
+databases:
+  - name: seorganize-db
+    plan: starter
+    databaseName: reuniao_db
+    user: seorganize
