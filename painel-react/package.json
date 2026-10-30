@@ -1,0 +1,28 @@
+{
+  "name": "seorganize-painel",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Painel em React que mostra a ocupação das salas do SeOrganize em tempo real",
+  "scripts": {
+    "dev": "vite",
+    "dev:mock": "vite --mode mock",
+    "build": "vite build",
+    "build:demo": "vite build --mode mock --outDir dist-demo",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "@vitejs/plugin-react": "^4.7.0",
+    "jsdom": "^25.0.1",
+    "vite": "^5.4.21",
+    "vitest": "^2.1.9"
+  }
+}

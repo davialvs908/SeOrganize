@@ -129,6 +129,10 @@ public class AutorizacaoInterceptor implements HandlerInterceptor {
         if (rota.equals("/alterar-senha") || rota.startsWith("/alterar-senha/")) {
             return true;
         }
+        // Painel React e a API somente leitura que ele consome: qualquer perfil logado pode ver
+        if (rota.startsWith("/painel") || rota.startsWith("/api/painel")) {
+            return "GET".equalsIgnoreCase(metodo);
+        }
         return rota.startsWith("/kanban")
                 || rota.startsWith("/criar-tarefa")
                 || rota.startsWith("/editar-tarefa")
